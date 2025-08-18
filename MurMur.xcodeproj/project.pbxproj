@@ -6,20 +6,92 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D8C37D1A2E5313440053AB90 /* Keyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D8C37D132E5313440053AB90 /* Keyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		D8C37D182E5313440053AB90 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D83A167A2E4A766F006834CF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D8C37D122E5313440053AB90;
+			remoteInfo = Keyboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D8C37D1F2E5313440053AB90 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				D8C37D1A2E5313440053AB90 /* Keyboard.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		D83A16822E4A766F006834CF /* MurMur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MurMur.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8C37D132E5313440053AB90 /* Keyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Keyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D8C37D1B2E5313440053AB90 /* Exceptions for "Keyboard" folder in "Keyboard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D8C37D122E5313440053AB90 /* Keyboard */;
+		};
+		D8C37D2A2E5314B30053AB90 /* Exceptions for "MurMur" folder in "Keyboard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				SharedConstants.swift,
+			);
+			target = D8C37D122E5313440053AB90 /* Keyboard */;
+		};
+		D8C37D2C2E5314DD0053AB90 /* Exceptions for "MurMur" folder in "MurMur" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = D83A16812E4A766F006834CF /* MurMur */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D83A16842E4A766F006834CF /* MurMur */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D8C37D2C2E5314DD0053AB90 /* Exceptions for "MurMur" folder in "MurMur" target */,
+				D8C37D2A2E5314B30053AB90 /* Exceptions for "MurMur" folder in "Keyboard" target */,
+			);
 			path = MurMur;
+			sourceTree = "<group>";
+		};
+		D8C37D142E5313440053AB90 /* Keyboard */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D8C37D1B2E5313440053AB90 /* Exceptions for "Keyboard" folder in "Keyboard" target */,
+			);
+			path = Keyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D83A167F2E4A766F006834CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D8C37D102E5313440053AB90 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +105,7 @@
 			isa = PBXGroup;
 			children = (
 				D83A16842E4A766F006834CF /* MurMur */,
+				D8C37D142E5313440053AB90 /* Keyboard */,
 				D83A16832E4A766F006834CF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +114,7 @@
 			isa = PBXGroup;
 			children = (
 				D83A16822E4A766F006834CF /* MurMur.app */,
+				D8C37D132E5313440053AB90 /* Keyboard.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -55,10 +129,12 @@
 				D83A167E2E4A766F006834CF /* Sources */,
 				D83A167F2E4A766F006834CF /* Frameworks */,
 				D83A16802E4A766F006834CF /* Resources */,
+				D8C37D1F2E5313440053AB90 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D8C37D192E5313440053AB90 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D83A16842E4A766F006834CF /* MurMur */,
@@ -69,6 +145,28 @@
 			productName = MurMur;
 			productReference = D83A16822E4A766F006834CF /* MurMur.app */;
 			productType = "com.apple.product-type.application";
+		};
+		D8C37D122E5313440053AB90 /* Keyboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D8C37D1C2E5313440053AB90 /* Build configuration list for PBXNativeTarget "Keyboard" */;
+			buildPhases = (
+				D8C37D0F2E5313440053AB90 /* Sources */,
+				D8C37D102E5313440053AB90 /* Frameworks */,
+				D8C37D112E5313440053AB90 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D8C37D142E5313440053AB90 /* Keyboard */,
+			);
+			name = Keyboard;
+			packageProductDependencies = (
+			);
+			productName = Keyboard;
+			productReference = D8C37D132E5313440053AB90 /* Keyboard.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -81,6 +179,9 @@
 				LastUpgradeCheck = 1640;
 				TargetAttributes = {
 					D83A16812E4A766F006834CF = {
+						CreatedOnToolsVersion = 16.4;
+					};
+					D8C37D122E5313440053AB90 = {
 						CreatedOnToolsVersion = 16.4;
 					};
 				};
@@ -100,12 +201,20 @@
 			projectRoot = "";
 			targets = (
 				D83A16812E4A766F006834CF /* MurMur */,
+				D8C37D122E5313440053AB90 /* Keyboard */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D83A16802E4A766F006834CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D8C37D112E5313440053AB90 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +231,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D8C37D0F2E5313440053AB90 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D8C37D192E5313440053AB90 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D8C37D122E5313440053AB90 /* Keyboard */;
+			targetProxy = D8C37D182E5313440053AB90 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		D83A168B2E4A7670006834CF /* Debug */ = {
@@ -249,10 +373,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MurMur/MurMur.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = XFAR457L8D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MurMur/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MurMur needs to access your microphone to record audio for transcription.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -276,10 +404,14 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = MurMur/MurMur.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = XFAR457L8D;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = MurMur/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "MurMur needs to access your microphone to record audio for transcription.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -292,6 +424,60 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nirajnair.MurMur;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		D8C37D1D2E5313440053AB90 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Keyboard/Keyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = XFAR457L8D;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Keyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Keyboard;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMotionUsageDescription = "MurMur needs to access your microphone to record audio for transcription.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nirajnair.MurMur.Keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D8C37D1E2E5313440053AB90 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Keyboard/Keyboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = XFAR457L8D;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Keyboard/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Keyboard;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMotionUsageDescription = "MurMur needs to access your microphone to record audio for transcription.";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.nirajnair.MurMur.Keyboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -315,6 +501,15 @@
 			buildConfigurations = (
 				D83A168E2E4A7670006834CF /* Debug */,
 				D83A168F2E4A7670006834CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D8C37D1C2E5313440053AB90 /* Build configuration list for PBXNativeTarget "Keyboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D8C37D1D2E5313440053AB90 /* Debug */,
+				D8C37D1E2E5313440053AB90 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
