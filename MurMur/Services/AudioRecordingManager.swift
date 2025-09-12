@@ -15,6 +15,7 @@ import OSLog
 
 class AudioRecordingManager: NSObject, ObservableObject {
     static let shared = AudioRecordingManager()
+    private let AUDIO_SESSION_TIMEOUT_DURATION: TimeInterval = 5 * 60
 
     @Published var isRecording = false
     @Published var recordingLevel: Float = 0.0
@@ -23,6 +24,8 @@ class AudioRecordingManager: NSObject, ObservableObject {
     private var audioRecorder: AVAudioRecorder?
     private var audioSession: AVAudioSession?
     private var recordingTimer: Timer?
+    private var sessionTimeoutTimer: DispatchSourceTimer?
+    private var backgroundTaskIdentifier: UIBackgroundTaskIdentifier = .invalid
     private var currentSessionId: String?
     private var recordingSegments: [URL] = []
 
@@ -274,6 +277,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
             recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
                 self.updateRecordingLevel()
             }
+            startSessionTimeoutTimer()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 self.returnToHostApp()
             }
@@ -370,10 +374,62 @@ class AudioRecordingManager: NSObject, ObservableObject {
         }
     }
 
+    private func startSessionTimeoutTimer() {
+        sessionTimeoutTimer?.cancel()
+        sessionTimeoutTimer = nil
+        #if canImport(UIKit)
+            backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(
+                withName: "AudioSessionTimeout"
+            ) { [weak self] in
+                self?.endBackgroundTask()
+            }
+        #endif
+        sessionTimeoutTimer = DispatchSource.makeTimerSource(
+            queue: DispatchQueue.global(qos: .background))
+        sessionTimeoutTimer?.schedule(deadline: .now() + AUDIO_SESSION_TIMEOUT_DURATION)
+        sessionTimeoutTimer?.setEventHandler { [weak self] in
+            DispatchQueue.main.async {
+                Logger.warning(
+                    "Recording session timed out after \(self?.AUDIO_SESSION_TIMEOUT_DURATION ?? 0) seconds - automatically ending session"
+                )
+                self?.endRecordingSession()
+            }
+        }
+        sessionTimeoutTimer?.resume()
+        Logger.debug(
+            "Background-compatible session timeout timer started - will auto-end session in \(AUDIO_SESSION_TIMEOUT_DURATION) seconds"
+        )
+    }
+
+    private func endBackgroundTask() {
+        #if canImport(UIKit)
+            if backgroundTaskIdentifier != .invalid {
+                UIApplication.shared.endBackgroundTask(backgroundTaskIdentifier)
+                backgroundTaskIdentifier = .invalid
+            }
+        #endif
+    }
+
     func endRecordingSession() {
         if isRecording {
-            stopRecording()
+            cancelRecording()
         }
+        recordingTimer?.invalidate()
+        recordingTimer = nil
+        sessionTimeoutTimer?.cancel()
+        sessionTimeoutTimer = nil
+        endBackgroundTask()
+        audioRecorder?.stop()
+        audioRecorder = nil
+        #if canImport(UIKit)
+            do {
+                try audioSession?.setActive(false, options: .notifyOthersOnDeactivation)
+                SharedUserDefaults.isAudioSessionActive = false
+                Logger.debug("Audio session deactivated successfully")
+            } catch {
+                Logger.error("Failed to deactivate audio session: \(error)")
+            }
+        #endif
         isRecording = false
         isPaused = false
         SharedUserDefaults.isRecording = false
@@ -386,7 +442,6 @@ class AudioRecordingManager: NSObject, ObservableObject {
             name: DarwinNotifications.recordingStateChanged
         )
         Logger.debug("Recording session ended successfully")
-        simulateTranscription()
     }
 
     func cancelRecording() {
