@@ -7,6 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D828647F2E7422EC004CB6B4 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D828647E2E7422EC004CB6B4 /* Logger.swift */; };
+		D82864802E7422EC004CB6B4 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D828647E2E7422EC004CB6B4 /* Logger.swift */; };
+		D8A61F792E69095600F4FA3F /* DarwinNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F4C2E69048C00F4FA3F /* DarwinNotificationManager.swift */; };
+		D8A61F7A2E69095600F4FA3F /* DarwinNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F4C2E69048C00F4FA3F /* DarwinNotificationManager.swift */; };
+		D8A61F7B2E69095E00F4FA3F /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F4B2E69043F00F4FA3F /* SharedDefaults.swift */; };
+		D8A61F7C2E69095E00F4FA3F /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F4B2E69043F00F4FA3F /* SharedDefaults.swift */; };
+		D8A61F7D2E69096300F4FA3F /* KeyboardKitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F492E6903E400F4FA3F /* KeyboardKitConfig.swift */; };
+		D8A61F7E2E69096300F4FA3F /* KeyboardKitConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F492E6903E400F4FA3F /* KeyboardKitConfig.swift */; };
+		D8A61F852E6A173700F4FA3F /* KeyboardKit in Frameworks */ = {isa = PBXBuildFile; productRef = D8A61F842E6A173700F4FA3F /* KeyboardKit */; };
+		D8A61F872E6A174400F4FA3F /* KeyboardKit in Frameworks */ = {isa = PBXBuildFile; productRef = D8A61F862E6A174400F4FA3F /* KeyboardKit */; };
+		D8A61F8E2E70A34900F4FA3F /* AudioSessionStatusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F8D2E70A34900F4FA3F /* AudioSessionStatusManager.swift */; };
+		D8A61F8F2E70A34900F4FA3F /* AudioSessionStatusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F8D2E70A34900F4FA3F /* AudioSessionStatusManager.swift */; };
 		D8C37D1A2E5313440053AB90 /* Keyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = D8C37D132E5313440053AB90 /* Keyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -35,11 +47,40 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D828647E2E7422EC004CB6B4 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		D83A16822E4A766F006834CF /* MurMur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MurMur.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D8A61F492E6903E400F4FA3F /* KeyboardKitConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardKitConfig.swift; sourceTree = "<group>"; };
+		D8A61F4B2E69043F00F4FA3F /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDefaults.swift; sourceTree = "<group>"; };
+		D8A61F4C2E69048C00F4FA3F /* DarwinNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DarwinNotificationManager.swift; sourceTree = "<group>"; };
+		D8A61F8D2E70A34900F4FA3F /* AudioSessionStatusManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSessionStatusManager.swift; sourceTree = "<group>"; };
 		D8C37D132E5313440053AB90 /* Keyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = Keyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D8A61F672E69058600F4FA3F /* Exceptions for "MurMur" folder in "MurMur" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				ContentView.swift,
+				MurMurApp.swift,
+				Services/AudioRecordingManager.swift,
+				Services/DeepLinkManager.swift,
+				SharedConstants.swift,
+			);
+			target = D83A16812E4A766F006834CF /* MurMur */;
+		};
+		D8A61F682E69058600F4FA3F /* Exceptions for "MurMur" folder in "Keyboard" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Assets.xcassets,
+				ContentView.swift,
+				Info.plist,
+				MurMurApp.swift,
+				Services/AudioRecordingManager.swift,
+				Services/DeepLinkManager.swift,
+			);
+			target = D8C37D122E5313440053AB90 /* Keyboard */;
+		};
 		D8C37D1B2E5313440053AB90 /* Exceptions for "Keyboard" folder in "Keyboard" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -47,28 +88,14 @@
 			);
 			target = D8C37D122E5313440053AB90 /* Keyboard */;
 		};
-		D8C37D2A2E5314B30053AB90 /* Exceptions for "MurMur" folder in "Keyboard" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				SharedConstants.swift,
-			);
-			target = D8C37D122E5313440053AB90 /* Keyboard */;
-		};
-		D8C37D2C2E5314DD0053AB90 /* Exceptions for "MurMur" folder in "MurMur" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = D83A16812E4A766F006834CF /* MurMur */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		D83A16842E4A766F006834CF /* MurMur */ = {
+		D8A61F612E69058600F4FA3F /* MurMur */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				D8C37D2C2E5314DD0053AB90 /* Exceptions for "MurMur" folder in "MurMur" target */,
-				D8C37D2A2E5314B30053AB90 /* Exceptions for "MurMur" folder in "Keyboard" target */,
+				D8A61F672E69058600F4FA3F /* Exceptions for "MurMur" folder in "MurMur" target */,
+				D8A61F682E69058600F4FA3F /* Exceptions for "MurMur" folder in "Keyboard" target */,
 			);
 			path = MurMur;
 			sourceTree = "<group>";
@@ -88,6 +115,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8A61F852E6A173700F4FA3F /* KeyboardKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -95,6 +123,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8A61F872E6A174400F4FA3F /* KeyboardKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,9 +133,11 @@
 		D83A16792E4A766F006834CF = {
 			isa = PBXGroup;
 			children = (
-				D83A16842E4A766F006834CF /* MurMur */,
+				D8A61F462E6903B500F4FA3F /* Shared */,
 				D8C37D142E5313440053AB90 /* Keyboard */,
 				D83A16832E4A766F006834CF /* Products */,
+				D8A61F612E69058600F4FA3F /* MurMur */,
+				D8A61F732E6907DA00F4FA3F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -117,6 +148,41 @@
 				D8C37D132E5313440053AB90 /* Keyboard.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D8A61F462E6903B500F4FA3F /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D8A61F4A2E69043800F4FA3F /* Utilities */,
+				D8A61F482E6903DD00F4FA3F /* Models */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		D8A61F482E6903DD00F4FA3F /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				D8A61F492E6903E400F4FA3F /* KeyboardKitConfig.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D8A61F4A2E69043800F4FA3F /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				D8A61F8D2E70A34900F4FA3F /* AudioSessionStatusManager.swift */,
+				D8A61F4C2E69048C00F4FA3F /* DarwinNotificationManager.swift */,
+				D8A61F4B2E69043F00F4FA3F /* SharedDefaults.swift */,
+				D828647E2E7422EC004CB6B4 /* Logger.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		D8A61F732E6907DA00F4FA3F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -136,11 +202,9 @@
 			dependencies = (
 				D8C37D192E5313440053AB90 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				D83A16842E4A766F006834CF /* MurMur */,
-			);
 			name = MurMur;
 			packageProductDependencies = (
+				D8A61F842E6A173700F4FA3F /* KeyboardKit */,
 			);
 			productName = MurMur;
 			productReference = D83A16822E4A766F006834CF /* MurMur.app */;
@@ -159,10 +223,12 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				D8A61F612E69058600F4FA3F /* MurMur */,
 				D8C37D142E5313440053AB90 /* Keyboard */,
 			);
 			name = Keyboard;
 			packageProductDependencies = (
+				D8A61F862E6A174400F4FA3F /* KeyboardKit */,
 			);
 			productName = Keyboard;
 			productReference = D8C37D132E5313440053AB90 /* Keyboard.appex */;
@@ -195,6 +261,9 @@
 			);
 			mainGroup = D83A16792E4A766F006834CF;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D8A61F832E6A173700F4FA3F /* XCRemoteSwiftPackageReference "KeyboardKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D83A16832E4A766F006834CF /* Products */;
 			projectDirPath = "";
@@ -228,6 +297,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8A61F7B2E69095E00F4FA3F /* SharedDefaults.swift in Sources */,
+				D8A61F8F2E70A34900F4FA3F /* AudioSessionStatusManager.swift in Sources */,
+				D828647F2E7422EC004CB6B4 /* Logger.swift in Sources */,
+				D8A61F792E69095600F4FA3F /* DarwinNotificationManager.swift in Sources */,
+				D8A61F7D2E69096300F4FA3F /* KeyboardKitConfig.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -235,6 +309,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D8A61F7A2E69095600F4FA3F /* DarwinNotificationManager.swift in Sources */,
+				D8A61F7E2E69096300F4FA3F /* KeyboardKitConfig.swift in Sources */,
+				D8A61F7C2E69095E00F4FA3F /* SharedDefaults.swift in Sources */,
+				D82864802E7422EC004CB6B4 /* Logger.swift in Sources */,
+				D8A61F8E2E70A34900F4FA3F /* AudioSessionStatusManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -515,6 +594,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D8A61F832E6A173700F4FA3F /* XCRemoteSwiftPackageReference "KeyboardKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/KeyboardKit/KeyboardKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.9.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D8A61F842E6A173700F4FA3F /* KeyboardKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D8A61F832E6A173700F4FA3F /* XCRemoteSwiftPackageReference "KeyboardKit" */;
+			productName = KeyboardKit;
+		};
+		D8A61F862E6A174400F4FA3F /* KeyboardKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D8A61F832E6A173700F4FA3F /* XCRemoteSwiftPackageReference "KeyboardKit" */;
+			productName = KeyboardKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D83A167A2E4A766F006834CF /* Project object */;
 }
