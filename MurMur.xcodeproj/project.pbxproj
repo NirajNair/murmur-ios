@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		D828647F2E7422EC004CB6B4 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D828647E2E7422EC004CB6B4 /* Logger.swift */; };
 		D82864802E7422EC004CB6B4 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = D828647E2E7422EC004CB6B4 /* Logger.swift */; };
+		D82866392E7D06F4004CB6B4 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82866382E7D06F4004CB6B4 /* FileUtils.swift */; };
+		D828663A2E7D06F4004CB6B4 /* FileUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = D82866382E7D06F4004CB6B4 /* FileUtils.swift */; };
 		D8A61F792E69095600F4FA3F /* DarwinNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F4C2E69048C00F4FA3F /* DarwinNotificationManager.swift */; };
 		D8A61F7A2E69095600F4FA3F /* DarwinNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F4C2E69048C00F4FA3F /* DarwinNotificationManager.swift */; };
 		D8A61F7B2E69095E00F4FA3F /* SharedDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A61F4B2E69043F00F4FA3F /* SharedDefaults.swift */; };
@@ -48,6 +50,7 @@
 
 /* Begin PBXFileReference section */
 		D828647E2E7422EC004CB6B4 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
+		D82866382E7D06F4004CB6B4 /* FileUtils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileUtils.swift; sourceTree = "<group>"; };
 		D83A16822E4A766F006834CF /* MurMur.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MurMur.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D8A61F492E6903E400F4FA3F /* KeyboardKitConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardKitConfig.swift; sourceTree = "<group>"; };
 		D8A61F4B2E69043F00F4FA3F /* SharedDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDefaults.swift; sourceTree = "<group>"; };
@@ -65,6 +68,7 @@
 				MurMurApp.swift,
 				Services/AudioRecordingManager.swift,
 				Services/DeepLinkManager.swift,
+				Services/TranscriptionService.swift,
 				SharedConstants.swift,
 			);
 			target = D83A16812E4A766F006834CF /* MurMur */;
@@ -78,6 +82,7 @@
 				MurMurApp.swift,
 				Services/AudioRecordingManager.swift,
 				Services/DeepLinkManager.swift,
+				Services/TranscriptionService.swift,
 			);
 			target = D8C37D122E5313440053AB90 /* Keyboard */;
 		};
@@ -174,6 +179,7 @@
 				D8A61F4C2E69048C00F4FA3F /* DarwinNotificationManager.swift */,
 				D8A61F4B2E69043F00F4FA3F /* SharedDefaults.swift */,
 				D828647E2E7422EC004CB6B4 /* Logger.swift */,
+				D82866382E7D06F4004CB6B4 /* FileUtils.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -300,6 +306,7 @@
 				D8A61F7B2E69095E00F4FA3F /* SharedDefaults.swift in Sources */,
 				D8A61F8F2E70A34900F4FA3F /* AudioSessionStatusManager.swift in Sources */,
 				D828647F2E7422EC004CB6B4 /* Logger.swift in Sources */,
+				D828663A2E7D06F4004CB6B4 /* FileUtils.swift in Sources */,
 				D8A61F792E69095600F4FA3F /* DarwinNotificationManager.swift in Sources */,
 				D8A61F7D2E69096300F4FA3F /* KeyboardKitConfig.swift in Sources */,
 			);
@@ -314,6 +321,7 @@
 				D8A61F7C2E69095E00F4FA3F /* SharedDefaults.swift in Sources */,
 				D82864802E7422EC004CB6B4 /* Logger.swift in Sources */,
 				D8A61F8E2E70A34900F4FA3F /* AudioSessionStatusManager.swift in Sources */,
+				D82866392E7D06F4004CB6B4 /* FileUtils.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -19,6 +19,10 @@
         <string>$(PRODUCT_MODULE_NAME).KeyboardViewController</string>
     </dict>
 
+    <!-- Network permissions -->
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>MurMur keyboard needs local network access to connect to your transcription server for processing voice recordings.</string>
+
     <!-- Bundle identifiers and versioning -->
     <key>CFBundleIdentifier</key>
     <string>com.nirajnair.MurMur.Keyboard</string>

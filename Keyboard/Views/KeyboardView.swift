@@ -22,6 +22,11 @@ struct KeyboardView: View {
         transcriptionInProgress = SharedUserDefaults.transcriptionInProgress
         isAudioSessionActive = SharedUserDefaults.isAudioSessionActive
         isPaused = SharedUserDefaults.isPaused
+        if SharedUserDefaults.recordingSessionId == nil {
+            isRecording = false
+            isPaused = false
+            isAudioSessionActive = false
+        }
     }
 
     var body: some View {

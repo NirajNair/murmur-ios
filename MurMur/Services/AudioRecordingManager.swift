@@ -26,40 +26,23 @@ class AudioRecordingManager: NSObject, ObservableObject {
     private var recordingTimer: Timer?
     private var sessionTimeoutTimer: DispatchSourceTimer?
     private var backgroundTaskIdentifier: UIBackgroundTaskIdentifier = .invalid
-    private var currentSessionId: String?
-    private var recordingSegments: [URL] = []
+    private var currentRecordingURL: URL?
+    private var audioEngine: AVAudioEngine?
+    private var inputNode: AVAudioInputNode?
+    private var levelTimer: Timer?
 
     override init() {
         super.init()
         setupAudioSession()
+        setupAudioEngine()
         registerForAppLifecycleNotifications()
         restoreSessionState()
+        FileUtils.shared.performInitialCleanup()
     }
 
     private func restoreSessionState() {
-        currentSessionId = SharedUserDefaults.recordingSessionId
         isPaused = SharedUserDefaults.isPaused
         SharedUserDefaults.isAudioSessionActive = audioSession?.isOtherAudioPlaying ?? false
-        if let sessionId = currentSessionId {
-            loadRecordingSegments(for: sessionId)
-        }
-    }
-
-    private func loadRecordingSegments(for sessionId: String) {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let sessionFolder = documentsPath[0].appendingPathComponent("recordings/\(sessionId)")
-        guard FileManager.default.fileExists(atPath: sessionFolder.path) else { return }
-        do {
-            let files = try FileManager.default.contentsOfDirectory(
-                at: sessionFolder, includingPropertiesForKeys: nil)
-            recordingSegments = files.filter { $0.pathExtension == "m4a" }.sorted {
-                $0.lastPathComponent < $1.lastPathComponent
-            }
-            Logger.debug(
-                "Loaded \(recordingSegments.count) recording segments for session \(sessionId)")
-        } catch {
-            Logger.error("Failed to load recording segments: \(error)")
-        }
     }
 
     private func setupAudioSession() {
@@ -68,7 +51,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
             do {
                 try audioSession?.setCategory(
                     .playAndRecord, mode: .default,
-                    options: [.defaultToSpeaker, .allowBluetooth, .mixWithOthers])
+                    options: [.defaultToSpeaker, .allowBluetooth])
                 try audioSession?.setActive(true)
                 SharedUserDefaults.isAudioSessionActive = true
                 Logger.debug("Audio session successfully configured for recording")
@@ -84,6 +67,52 @@ class AudioRecordingManager: NSObject, ObservableObject {
                 SharedUserDefaults.isAudioSessionActive = false
             }
         #endif
+    }
+
+    private func setupAudioEngine() {
+        audioEngine = AVAudioEngine()
+        guard let engine = audioEngine else {
+            Logger.error("Failed to create AVAudioEngine")
+            return
+        }
+        inputNode = engine.inputNode
+        let inputFormat = inputNode?.outputFormat(forBus: 0)
+        inputNode?.installTap(onBus: 0, bufferSize: 1024, format: inputFormat) {
+            [weak self] (buffer, time) in
+            self?.calculateAudioLevel(from: buffer)
+        }
+        do {
+            try engine.start()
+            Logger.debug(
+                "AVAudioEngine started successfully - microphone indicator should be visible")
+
+            startLevelMonitoring()
+        } catch {
+            Logger.error("Failed to start AVAudioEngine: \(error)")
+        }
+    }
+
+    private func calculateAudioLevel(from buffer: AVAudioPCMBuffer) {
+        guard let channelData = buffer.floatChannelData?[0] else { return }
+        let channelDataArray = Array(
+            UnsafeBufferPointer(start: channelData, count: Int(buffer.frameLength)))
+
+        let rms = sqrt(
+            channelDataArray.map { $0 * $0 }.reduce(0, +) / Float(channelDataArray.count))
+
+        let decibels = 20 * log10(rms)
+        DispatchQueue.main.async { [weak self] in
+            if self?.isRecording == true {
+                self?.recordingLevel = max(-80, decibels)
+            }
+        }
+    }
+
+    private func startLevelMonitoring() {
+        levelTimer?.invalidate()
+        levelTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) {
+            [weak self] _ in
+        }
     }
 
     private func registerForAppLifecycleNotifications() {
@@ -115,8 +144,12 @@ class AudioRecordingManager: NSObject, ObservableObject {
                 try audioSession?.setActive(true)
                 SharedUserDefaults.isAudioSessionActive = true
                 Logger.debug("Audio session kept active in background")
+                if let engine = audioEngine, !engine.isRunning {
+                    try engine.start()
+                    Logger.debug("Audio engine restarted in background")
+                }
             } catch {
-                Logger.error("Failed to keep audio session active in background: \(error)")
+                Logger.error("Failed to keep audio session/engine active in background: \(error)")
                 SharedUserDefaults.isAudioSessionActive = false
             }
         #endif
@@ -128,16 +161,29 @@ class AudioRecordingManager: NSObject, ObservableObject {
                 try audioSession?.setActive(true)
                 SharedUserDefaults.isAudioSessionActive = true
                 Logger.debug("Audio session reactivated in foreground")
+                if let engine = audioEngine, !engine.isRunning {
+                    try engine.start()
+                    Logger.debug("Audio engine restarted in foreground")
+                }
             } catch {
-                Logger.error("Failed to reactivate audio session in foreground: \(error)")
+                Logger.error("Failed to reactivate audio session/engine in foreground: \(error)")
                 SharedUserDefaults.isAudioSessionActive = false
             }
         #endif
     }
 
     @objc private func handleAppWillTerminate() {
-        Logger.debug("App will terminate - marking audio session as inactive")
+        Logger.debug("App will terminate - cleaning up audio engine and session")
+        levelTimer?.invalidate()
+        levelTimer = nil
+        if let engine = audioEngine, engine.isRunning {
+            engine.stop()
+            inputNode?.removeTap(onBus: 0)
+        }
+        audioEngine = nil
+        inputNode = nil
         SharedUserDefaults.isAudioSessionActive = false
+        SharedUserDefaults.recordingSessionId = nil
         if isRecording {
             endRecordingSession()
         }
@@ -172,12 +218,18 @@ class AudioRecordingManager: NSObject, ObservableObject {
                     try audioSession?.setActive(true)
                     SharedUserDefaults.isAudioSessionActive = true
                     Logger.debug("Audio session successfully reactivated after interruption")
-                    if isPaused && currentSessionId != nil {
+                    if let engine = audioEngine, !engine.isRunning {
+                        try engine.start()
+                        Logger.debug("Audio engine restarted after interruption")
+                    }
+
+                    if isPaused && SharedUserDefaults.recordingSessionId != nil {
                         Logger.debug("Resuming recording after audio session interruption")
                         resumeRecording()
                     }
                 } catch {
-                    Logger.error("Failed to reactivate audio session after interruption: \(error)")
+                    Logger.error(
+                        "Failed to reactivate audio session/engine after interruption: \(error)")
                     SharedUserDefaults.isAudioSessionActive = false
                 }
             } else {
@@ -239,51 +291,37 @@ class AudioRecordingManager: NSObject, ObservableObject {
     }
 
     private func startRecordingInternal() {
-        cleanupTemporarySessionKeeper()
-        if currentSessionId == nil {
-            currentSessionId = UUID().uuidString
-            SharedUserDefaults.recordingSessionId = currentSessionId
-            SharedUserDefaults.currentRecordingSegment = 0
-            recordingSegments.removeAll()
+        if audioRecorder != nil {
+            Logger.debug("Cleaning up existing audio recorder before starting new session")
+            audioRecorder?.stop()
+            audioRecorder = nil
         }
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let sessionFolder = documentsPath[0].appendingPathComponent(
-            "recordings/\(currentSessionId!)")
-
-        try? FileManager.default.createDirectory(
-            at: sessionFolder, withIntermediateDirectories: true, attributes: nil)
-
-        let currentSegment = SharedUserDefaults.currentRecordingSegment
-        let audioFilename = sessionFolder.appendingPathComponent("segment_\(currentSegment).m4a")
-        let settings = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44100,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-        ]
-        do {
-            audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
-            audioRecorder?.delegate = self
-            audioRecorder?.isMeteringEnabled = true
-            audioRecorder?.record()
-            isRecording = true
-            isPaused = false
-            SharedUserDefaults.isRecording = true
-            SharedUserDefaults.isPaused = false
-            NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
-            DarwinNotificationManager.shared.postNotification(
-                name: DarwinNotifications.recordingStateChanged
-            )
-            recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-                self.updateRecordingLevel()
-            }
-            startSessionTimeoutTimer()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.returnToHostApp()
-            }
-        } catch {
-            Logger.error("Failed to start recording: \(error)")
+        currentRecordingURL = FileUtils.shared.createUniqueRecordingURL()
+        guard let recordingURL = currentRecordingURL else {
+            Logger.error("Failed to create recording URL")
+            return
         }
+        guard createAudioRecorder(url: recordingURL, createDirectory: true) else {
+            Logger.error("Failed to start recording")
+            return
+        }
+        let sessionId = UUID().uuidString
+        isRecording = true
+        isPaused = false
+        SharedUserDefaults.isRecording = true
+        SharedUserDefaults.isPaused = false
+        SharedUserDefaults.recordingSessionId = sessionId
+        NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
+        DarwinNotificationManager.shared.postNotification(
+            name: DarwinNotifications.recordingStateChanged
+        )
+        recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
+            self.updateRecordingLevel()
+        }
+        startSessionTimeoutTimer()
+        // DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        //     self.returnToHostApp()
+        // }
     }
 
     func stopRecording() {
@@ -295,65 +333,17 @@ class AudioRecordingManager: NSObject, ObservableObject {
         SharedUserDefaults.isRecording = false
         SharedUserDefaults.isPaused = true
         SharedUserDefaults.isAudioSessionActive = true
-        saveCurrentSegmentAndPrepareNext()
         NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
         DarwinNotificationManager.shared.postNotification(
             name: DarwinNotifications.recordingStateChanged
         )
-        Logger.debug("Recording segment saved, recorder kept active for instant resume")
-        simulateTranscription()
-    }
-
-    private func saveCurrentSegmentAndPrepareNext() {
-        guard let recorder = audioRecorder else { return }
-        let recordingURL = recorder.url
-        recordingSegments.append(recordingURL)
-        Logger.debug("Recording segment saved: \(recordingURL.lastPathComponent)")
-        let timestamp = Int(Date().timeIntervalSince1970)
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let sessionFolder = documentsPath[0].appendingPathComponent(
-            "recordings/\(currentSessionId!)")
-        let currentSegment = SharedUserDefaults.currentRecordingSegment
-        let timestampedFile = sessionFolder.appendingPathComponent(
-            "segment_\(currentSegment)_\(timestamp).m4a")
-        do {
-            try FileManager.default.copyItem(at: recordingURL, to: timestampedFile)
-            Logger.debug("Audio segment saved to: \(timestampedFile.lastPathComponent)")
-        } catch {
-            Logger.error("Failed to copy audio segment: \(error)")
-        }
-        let newSegment = SharedUserDefaults.currentRecordingSegment + 1
-        SharedUserDefaults.currentRecordingSegment = newSegment
-        createNewRecorderForNextSegment()
-    }
-
-    private func createNewRecorderForNextSegment() {
-        audioRecorder?.stop()
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let sessionFolder = documentsPath[0].appendingPathComponent(
-            "recordings/\(currentSessionId!)")
-        let nextSegment = SharedUserDefaults.currentRecordingSegment
-        let audioFilename = sessionFolder.appendingPathComponent("segment_\(nextSegment).m4a")
-        let settings = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44100,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
-        ]
-        do {
-            audioRecorder = try AVAudioRecorder(url: audioFilename, settings: settings)
-            audioRecorder?.delegate = self
-            audioRecorder?.isMeteringEnabled = true
-            audioRecorder?.record()
-            Logger.debug("New recorder created for segment \(nextSegment), session stays active")
-        } catch {
-            Logger.error("Failed to create new recorder: \(error)")
-        }
+        Logger.debug("Recording stopped, starting transcription")
+        transcribeRecording()
     }
 
     func resumeRecording() {
-        guard isPaused, currentSessionId != nil else {
-            Logger.warning("Cannot resume: recording is not paused or no active session")
+        guard isPaused else {
+            Logger.warning("Cannot resume: recording is not paused")
             return
         }
         isRecording = true
@@ -365,7 +355,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
         DarwinNotificationManager.shared.postNotification(
             name: DarwinNotifications.recordingStateChanged
         )
-        Logger.debug("Recording resumed instantly - no delay!")
+        Logger.debug("Recording resumed!")
     }
 
     private func startRecordingTimer() {
@@ -422,26 +412,30 @@ class AudioRecordingManager: NSObject, ObservableObject {
         audioRecorder?.stop()
         audioRecorder = nil
         #if canImport(UIKit)
-            do {
-                try audioSession?.setActive(false, options: .notifyOthersOnDeactivation)
-                SharedUserDefaults.isAudioSessionActive = false
-                Logger.debug("Audio session deactivated successfully")
-            } catch {
-                Logger.error("Failed to deactivate audio session: \(error)")
+            if let engine = audioEngine, !engine.isRunning {
+                do {
+                    try engine.start()
+                    Logger.debug("Audio engine restarted to maintain microphone access")
+                } catch {
+                    Logger.error("Failed to restart audio engine: \(error)")
+                }
             }
+            SharedUserDefaults.isAudioSessionActive = true
+            Logger.debug("Audio session kept active - microphone indicator remains visible")
         #endif
         isRecording = false
         isPaused = false
         SharedUserDefaults.isRecording = false
         SharedUserDefaults.isPaused = false
-        currentSessionId = nil
         SharedUserDefaults.recordingSessionId = nil
-        SharedUserDefaults.currentRecordingSegment = 0
+        Logger.debug(
+            "endRecordingSession: isAudioSessionActive=\(SharedUserDefaults.isAudioSessionActive), isPaused=\(SharedUserDefaults.isPaused)"
+        )
         NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
         DarwinNotificationManager.shared.postNotification(
             name: DarwinNotifications.recordingStateChanged
         )
-        Logger.debug("Recording session ended successfully")
+        Logger.debug("Recording session ended - microphone access maintained")
     }
 
     func cancelRecording() {
@@ -453,77 +447,108 @@ class AudioRecordingManager: NSObject, ObservableObject {
         SharedUserDefaults.isRecording = false
         SharedUserDefaults.isPaused = true
         SharedUserDefaults.isAudioSessionActive = true
-        saveCurrentSegmentAndPrepareNext()
+        deleteRecordingFile()
         NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
         DarwinNotificationManager.shared.postNotification(
             name: DarwinNotifications.recordingStateChanged
         )
-        Logger.debug("Recording cancelled, but session kept active for instant resume")
+        Logger.debug("Recording cancelled and file deleted")
     }
 
-    private func keepRecorderActiveForNextSession() {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let tempRecordingURL = documentsPath[0].appendingPathComponent("temp_session_keeper.m4a")
+    func getCurrentRecordingURL() -> URL? {
+        return currentRecordingURL
+    }
+
+    private func resetAudioRecorderForNextSession() {
+        Logger.debug("Resetting audio recorder for next session")
+        audioRecorder?.stop()
+        audioRecorder = nil
+        currentRecordingURL = nil
+        isPaused = false
+        SharedUserDefaults.isPaused = false
+        Logger.debug("Audio recorder reset complete - ready for next session")
+    }
+
+    private func createAudioRecorder(url: URL, createDirectory: Bool = false) -> Bool {
+        if createDirectory {
+            guard FileUtils.shared.createDirectoryIfNeeded(for: url) else {
+                Logger.error("Failed to create directory for recording URL")
+                return false
+            }
+        }
         let settings = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44100,
+            AVFormatIDKey: Int(kAudioFormatLinearPCM),
+            AVSampleRateKey: 16000,
             AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
+            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
+            AVEncoderBitRateKey: 64000,
+            AVLinearPCMBitDepthKey: 16,
         ]
         do {
-            audioRecorder = try AVAudioRecorder(url: tempRecordingURL, settings: settings)
+            audioRecorder = try AVAudioRecorder(url: url, settings: settings)
             audioRecorder?.delegate = self
             audioRecorder?.isMeteringEnabled = true
             audioRecorder?.record()
-            Logger.debug("Temporary recorder created to keep audio session active")
+            return true
         } catch {
-            Logger.error("Failed to create temporary recorder: \(error)")
+            Logger.error("Failed to create audio recorder: \(error)")
+            return false
         }
-    }
-
-    private func cleanupTemporarySessionKeeper() {
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        let tempRecordingURL = documentsPath[0].appendingPathComponent("temp_session_keeper.m4a")
-        do {
-            if FileManager.default.fileExists(atPath: tempRecordingURL.path) {
-                try FileManager.default.removeItem(at: tempRecordingURL)
-                Logger.debug("Temporary session keeper file cleaned up")
-            }
-        } catch {
-            Logger.error("Failed to cleanup temporary session keeper file: \(error)")
-        }
-    }
-
-    func getRecordingSegments() -> [URL] {
-        return recordingSegments
-    }
-
-    func getCurrentSessionId() -> String? {
-        return currentSessionId
-    }
-
-    func getSessionFolder() -> URL? {
-        guard let sessionId = currentSessionId else { return nil }
-        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
-        return documentsPath[0].appendingPathComponent("recordings/\(sessionId)")
     }
 
     private func updateRecordingLevel() {
-        audioRecorder?.updateMeters()
-        recordingLevel = audioRecorder?.averagePower(forChannel: 0) ?? 0.0
+        if let recorder = audioRecorder, isRecording {
+            recorder.updateMeters()
+            recordingLevel = recorder.averagePower(forChannel: 0)
+        }
     }
 
-    private func simulateTranscription() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let transcription = "This is a simulated transcription of your voice recording."
-            SharedUserDefaults.pendingTranscription = transcription
-            DarwinNotificationManager.shared.postNotification(
-                name: DarwinNotifications.transcriptionReady
-            )
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                self.returnToHostApp()
+    private func transcribeRecording() {
+        guard let recordingURL = currentRecordingURL else {
+            Logger.error("No recording URL for transcription")
+            return
+        }
+        SharedUserDefaults.transcriptionInProgress = true
+        Logger.debug("Starting transcription for recording: \(recordingURL.lastPathComponent)")
+        TranscriptionService.shared.transcribeRecording(at: recordingURL) {
+            [weak self] result in
+            DispatchQueue.main.async {
+                SharedUserDefaults.transcriptionInProgress = false
+                switch result {
+                case .success(let transcription):
+                    Logger.debug("Transcription successful: \(transcription.prefix(50))...")
+                    SharedUserDefaults.pendingTranscription = transcription
+                    self?.deleteRecordingFile()
+                    self?.resetAudioRecorderForNextSession()
+                    DarwinNotificationManager.shared.postNotification(
+                        name: DarwinNotifications.transcriptionReady
+                    )
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self?.returnToHostApp()
+                    }
+                case .failure(let error):
+                    Logger.error("Transcription failed: \(error.localizedDescription)")
+                    let fallbackMessage = "Transcription failed: \(error.localizedDescription)"
+                    SharedUserDefaults.pendingTranscription = fallbackMessage
+                    self?.deleteRecordingFile()
+                    self?.resetAudioRecorderForNextSession()
+                    DarwinNotificationManager.shared.postNotification(
+                        name: DarwinNotifications.transcriptionReady
+                    )
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self?.returnToHostApp()
+                    }
+                }
             }
         }
+    }
+
+    private func deleteRecordingFile() {
+        guard let recordingURL = currentRecordingURL else {
+            Logger.debug("No recording URL to delete")
+            return
+        }
+        FileUtils.shared.deleteRecordingFile(at: recordingURL)
     }
 
     private func returnToHostApp() {

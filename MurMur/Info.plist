@@ -14,6 +14,8 @@
 	<string></string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>MurMur needs microphone access for voice recording.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>MurMur needs local network access to connect to your transcription server for processing voice recordings.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -29,5 +31,12 @@
 	<array>
 		<string>audio</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 </dict>
 </plist>

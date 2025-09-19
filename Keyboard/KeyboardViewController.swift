@@ -51,8 +51,9 @@ class KeyboardViewController: UIInputViewController {
     }
 
     private func handleStartTap() {
-        if SharedUserDefaults.isAudioSessionActive && SharedUserDefaults.isPaused {
-            Logger.debug("Keyboard: Sending resume recording notification")
+        if SharedUserDefaults.isAudioSessionActive {
+            Logger.debug(
+                "Keyboard: Audio session active - starting/resuming recording via notification")
             DarwinNotificationManager.shared.postNotification(
                 name: DarwinNotifications.startRecording
             )
