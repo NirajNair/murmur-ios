@@ -1,41 +1,48 @@
 import Foundation
+import KeyboardKit
 import OSLog
 import SwiftUI
 import UIKit
 
-class KeyboardViewController: UIInputViewController {
+class KeyboardViewController: KeyboardInputViewController {
     private let communicationManager = KeyboardCommunicationManager()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         AudioSessionStatusManager.shared.checkAudioSessionStatus()
         setupCommunication()
-        setupKeyboardView()
+
+        setup(for: .murMur) { result in
+            if case let .failure(error) = result {
+                print("Keyboard setup failed:", error)
+            }
+        }
     }
 
-    private func setupKeyboardView() {
-        let keyboardView = KeyboardView(
-            onStartTap: { [weak self] in
-                self?.handleStartTap()
-            },
-            onStopTap: { [weak self] in
-                self?.handleStopTap()
-            },
-            onCancelTap: { [weak self] in
-                self?.handleCancelTap()
-            }
-        )
-        let hostingController = UIHostingController(rootView: keyboardView)
-        addChild(hostingController)
-        view.addSubview(hostingController.view)
-        hostingController.didMove(toParent: self)
-        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            hostingController.view.topAnchor.constraint(equalTo: view.topAnchor),
-            hostingController.view.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            hostingController.view.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            hostingController.view.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
+    override func viewWillSetupKeyboardView() {
+        setupKeyboardView { controller in
+            KeyboardKit.KeyboardView(
+                state: controller.state,
+                services: controller.services,
+                buttonContent: { $0.view },
+                buttonView: { $0.view },
+                collapsedView: { $0.view },
+                emojiKeyboard: { $0.view },
+                toolbar: { _ in
+                    RecordingToolbarView(
+                        onStartTap: { [weak self] in
+                            self?.handleStartTap()
+                        },
+                        onStopTap: { [weak self] in
+                            self?.handleStopTap()
+                        },
+                        onCancelTap: { [weak self] in
+                            self?.handleCancelTap()
+                        }
+                    )
+                }
+            )
+        }
     }
 
     private func setupCommunication() {

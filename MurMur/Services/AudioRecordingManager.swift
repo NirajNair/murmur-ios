@@ -412,22 +412,18 @@ class AudioRecordingManager: NSObject, ObservableObject {
         audioRecorder?.stop()
         audioRecorder = nil
         #if canImport(UIKit)
-            if let engine = audioEngine, !engine.isRunning {
-                do {
-                    try engine.start()
-                    Logger.debug("Audio engine restarted to maintain microphone access")
-                } catch {
-                    Logger.error("Failed to restart audio engine: \(error)")
-                }
+            if let engine = audioEngine, engine.isRunning {
+                engine.stop()
+                inputNode?.removeTap(onBus: 0)
+                Logger.debug("Audio engine stopped")
             }
-            SharedUserDefaults.isAudioSessionActive = true
-            Logger.debug("Audio session kept active - microphone indicator remains visible")
         #endif
         isRecording = false
         isPaused = false
         SharedUserDefaults.isRecording = false
         SharedUserDefaults.isPaused = false
         SharedUserDefaults.recordingSessionId = nil
+        SharedUserDefaults.isAudioSessionActive = false
         Logger.debug(
             "endRecordingSession: isAudioSessionActive=\(SharedUserDefaults.isAudioSessionActive), isPaused=\(SharedUserDefaults.isPaused)"
         )
