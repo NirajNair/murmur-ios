@@ -11,109 +11,150 @@ struct RecordingToolbarView: View {
     @State private var transcriptionInProgress = false
     @State private var isAudioSessionActive = false
     @State private var isPaused = false
+    @State private var recordingTime: TimeInterval = 0
+    @State private var timer: Timer?
 
     private func handleStopRecording() {
         SharedUserDefaults.transcriptionInProgress = true
+        timer?.invalidate()
+        timer = nil
         onStopTap()
     }
 
     private func updateLocalState() {
+        let wasRecording = isRecording
         isRecording = SharedUserDefaults.isRecording
         transcriptionInProgress = SharedUserDefaults.transcriptionInProgress
         isAudioSessionActive = SharedUserDefaults.isAudioSessionActive
         isPaused = SharedUserDefaults.isPaused
+        if !wasRecording && isRecording && timer == nil {
+            recordingTime = 0
+            startTimer()
+        }
         if SharedUserDefaults.recordingSessionId == nil {
             isRecording = false
             isPaused = false
             isAudioSessionActive = false
+            recordingTime = 0
+            timer?.invalidate()
+            timer = nil
         }
     }
 
+    private func startTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+            recordingTime += 1
+        }
+    }
+
+    private func formatTime(_ time: TimeInterval) -> String {
+        let minutes = Int(time) / 60
+        let seconds = Int(time) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
     var body: some View {
-        HStack {
+        VStack(spacing: 8) {
             if transcriptionInProgress {
-                HStack {
-                    Image(systemName: "text.bubble.fill")
-                        .foregroundColor(.green)
-                    Text("Transcription in progress...")
-                        .font(.caption)
-                        .fontWeight(.medium)
-                        .foregroundColor(.green)
+                HStack(spacing: 12) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .primary))
+                        .scaleEffect(0.8)
+                    Text("Transcribing...")
+                        .foregroundColor(.primary)
+                        .font(.system(size: 16, weight: .medium))
                 }
+                .frame(maxWidth: .infinity)
+                .frame(height: 45)
+                .padding(.vertical, 8)
+                .cornerRadius(12)
             } else if !isRecording {
-                Button(action: onStartTap) {
-                    HStack {
-                        Image(systemName: "play.circle.fill")
-                            .foregroundColor(.blue)
-                        Text("Start")
-                            .font(.caption)
-                            .fontWeight(.medium)
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        onStartTap()
+                    }) {
+                        if isAudioSessionActive {
+                            Image(systemName: "mic")
+                                .foregroundColor(.white)
+                                .font(.system(size: 18, weight: .medium))
+                                .frame(width: 44, height: 44)
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [
+                                            Color.blue, Color.blue.opacity(0.6),
+                                        ]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .clipShape(Circle())
+                        } else {
+                            HStack(spacing: 8) {
+                                Image(systemName: "play")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 16, weight: .medium))
+                                Text("Start")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 16, weight: .medium))
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color.blue, Color.blue.opacity(0.6),
+                                    ]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(22)
+                        }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(20)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.blue.opacity(0.3), lineWidth: 1)
-                    )
                 }
+                .frame(height: 45)
             } else {
                 HStack {
-                    HStack {
-                        Circle()
-                            .fill(Color.red)
-                            .frame(width: 8, height: 8)
-                            .opacity(0.8)
-                        Text("Recording...")
-                            .font(.caption2)
-                            .fontWeight(.medium)
+                    Button(action: {
+                        timer?.invalidate()
+                        timer = nil
+                        recordingTime = 0
+                        onCancelTap()
+                    }) {
+                        Image(systemName: "trash")
                             .foregroundColor(.red)
+                            .font(.system(size: 18, weight: .medium))
+                            .frame(width: 44, height: 44)
+                            .background(Color.red.opacity(0.1))
+                            .clipShape(Circle())
                     }
-
                     Spacer()
-
-                    Button(action: handleStopRecording) {
-                        HStack {
-                            Image(systemName: "stop.circle.fill")
-                                .foregroundColor(.green)
-                            Text("Stop")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(16)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
-                        )
+                    HStack(spacing: 8) {
+                        Image(systemName: "clock")
+                            .foregroundColor(.primary)
+                            .font(.system(size: 14))
+                        Text(formatTime(recordingTime))
+                            .foregroundColor(.primary)
+                            .font(.system(size: 18, weight: .medium, design: .monospaced))
                     }
-
-                    Button(action: onCancelTap) {
-                        HStack {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.red)
-                            Text("Cancel")
-                                .font(.caption)
-                                .fontWeight(.medium)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.red.opacity(0.1))
-                        .cornerRadius(16)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.red.opacity(0.3), lineWidth: 1)
-                        )
+                    Spacer()
+                    Button(action: handleStopRecording) {
+                        Image(systemName: "checkmark")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 18, weight: .medium))
+                            .frame(width: 44, height: 44)
+                            .background(Color.blue.opacity(0.1))
+                            .clipShape(Circle())
                     }
                 }
+                .frame(height: 45)
+                .cornerRadius(12)
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(Color.secondary.opacity(0.05))
+        .padding(.horizontal, 12)
+        .padding(.top, 16)
+        .padding(.bottom, 12)
         .onReceive(NotificationCenter.default.publisher(for: .init("RecordingStateChanged"))) { _ in
             Logger.debug("RecordingStateChanged notification received")
             updateLocalState()
@@ -125,6 +166,10 @@ struct RecordingToolbarView: View {
         .onAppear {
             AudioSessionStatusManager.shared.checkAudioSessionStatus()
             updateLocalState()
+        }
+        .onDisappear {
+            timer?.invalidate()
+            timer = nil
         }
     }
 }
