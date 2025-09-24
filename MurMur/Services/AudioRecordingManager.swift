@@ -48,13 +48,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
     private func setupAudioSession() {
         #if canImport(UIKit)
             audioSession = AVAudioSession.sharedInstance()
-            do {
-                try audioSession?.setCategory(
-                    .playAndRecord, mode: .default,
-                    options: [.defaultToSpeaker, .allowBluetooth])
-                try audioSession?.setActive(true)
-                SharedUserDefaults.isAudioSessionActive = true
-                Logger.debug("Audio session successfully configured for recording")
+            if configureAudioSession() {
                 NotificationCenter.default.addObserver(
                     self,
                     selector: #selector(handleAudioSessionInterruption),
@@ -62,11 +56,25 @@ class AudioRecordingManager: NSObject, ObservableObject {
                     object: nil
                 )
                 Logger.debug("Audio session interrupt listener registered")
-            } catch {
-                Logger.error("Failed to set up audio session: \(error)")
-                SharedUserDefaults.isAudioSessionActive = false
             }
         #endif
+    }
+
+    private func configureAudioSession() -> Bool {
+        do {
+            try audioSession?.setCategory(
+                .playAndRecord, mode: .voiceChat,
+                options: [.defaultToSpeaker, .allowBluetooth])
+
+            try audioSession?.setActive(true)
+            SharedUserDefaults.isAudioSessionActive = true
+            Logger.debug("Audio session successfully configured for recording")
+            return true
+        } catch {
+            Logger.error("Failed to set up audio session: \(error)")
+            SharedUserDefaults.isAudioSessionActive = false
+            return false
+        }
     }
 
     private func setupAudioEngine() {
@@ -247,18 +255,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
             Logger.error("Audio recording permission denied")
             return false
         }
-        do {
-            try audioSession?.setCategory(
-                .playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
-            try audioSession?.setActive(true)
-            SharedUserDefaults.isAudioSessionActive = true
-            Logger.debug("Audio session successfully configured and activated for recording")
-            return true
-        } catch {
-            Logger.error("Failed to configure audio session for recording: \(error)")
-            SharedUserDefaults.isAudioSessionActive = false
-            return false
-        }
+        return configureAudioSession()
     }
 
     func requestPermissions() async -> Bool {
@@ -319,9 +316,6 @@ class AudioRecordingManager: NSObject, ObservableObject {
             self.updateRecordingLevel()
         }
         startSessionTimeoutTimer()
-        // DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-        //     self.returnToHostApp()
-        // }
     }
 
     func stopRecording() {
