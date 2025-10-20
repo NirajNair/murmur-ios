@@ -433,11 +433,10 @@ class AudioRecordingManager: NSObject, ObservableObject {
         recordingTimer?.invalidate()
         recordingTimer = nil
         isRecording = false
-        isPaused = true
         SharedUserDefaults.isRecording = false
-        SharedUserDefaults.isPaused = true
         SharedUserDefaults.isAudioSessionActive = true
         deleteRecordingFile()
+        resetAudioRecorderForNextSession()
         NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
         DarwinNotificationManager.shared.postNotification(
             name: DarwinNotifications.recordingStateChanged
