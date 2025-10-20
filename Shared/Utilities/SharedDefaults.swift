@@ -19,6 +19,9 @@ struct SharedUserDefaults {
         static let transcriptionInProgress = "transcriptionInProgress"
         static let isPaused = "isPaused"
         static let currentRecordingSegment = "currentRecordingSegment"
+        static let keyboardHasFullAccess = "keyboardHasFullAccess"
+        static let keyboardLastCheck = "keyboardLastCheck"
+        static let statusRequestTime = "statusRequestTime"
     }
 
     static var isRecording: Bool {
@@ -81,6 +84,30 @@ struct SharedUserDefaults {
         get { shared.integer(forKey: Keys.currentRecordingSegment) }
         set {
             shared.set(newValue, forKey: Keys.currentRecordingSegment)
+            shared.synchronize()
+        }
+    }
+
+    static var keyboardHasFullAccess: Bool {
+        get { shared.bool(forKey: Keys.keyboardHasFullAccess) }
+        set {
+            shared.set(newValue, forKey: Keys.keyboardHasFullAccess)
+            shared.synchronize()
+        }
+    }
+
+    static var keyboardLastCheck: Date? {
+        get { shared.object(forKey: Keys.keyboardLastCheck) as? Date }
+        set {
+            shared.set(newValue, forKey: Keys.keyboardLastCheck)
+            shared.synchronize()
+        }
+    }
+
+    static var statusRequestTime: Date? {
+        get { shared.object(forKey: Keys.statusRequestTime) as? Date }
+        set {
+            shared.set(newValue, forKey: Keys.statusRequestTime)
             shared.synchronize()
         }
     }

@@ -3,9 +3,11 @@ import OSLog
 import SwiftUI
 
 struct RecordingToolbarView: View {
+    let hasFullAccess: Bool
     let onStartTap: () -> Void
     let onStopTap: () -> Void
     let onCancelTap: () -> Void
+    let onOpenSettings: () -> Void
 
     @State private var isRecording = false
     @State private var transcriptionInProgress = false
@@ -13,6 +15,7 @@ struct RecordingToolbarView: View {
     @State private var isPaused = false
     @State private var recordingTime: TimeInterval = 0
     @State private var timer: Timer?
+    @State private var showFullAccessPrompt = false
 
     private func handleStopRecording() {
         SharedUserDefaults.transcriptionInProgress = true
@@ -55,7 +58,37 @@ struct RecordingToolbarView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            if transcriptionInProgress {
+            if showFullAccessPrompt {
+                VStack(spacing: 12) {
+                    Text("Go to MurMur > Keyboard > Toggle 'Allow Full Access' on")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .lineLimit(nil)
+
+                    Button(action: {
+                        onOpenSettings()
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "gear")
+                                .foregroundColor(.white)
+                                .font(.system(size: 14, weight: .medium))
+                            Text("Open Settings")
+                                .foregroundColor(.white)
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .cornerRadius(20)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 42)
+                .padding(.vertical, 12)
+                .padding(.horizontal, 12)
+            } else if transcriptionInProgress {
                 HStack(spacing: 12) {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .primary))
@@ -65,14 +98,18 @@ struct RecordingToolbarView: View {
                         .font(.system(size: 16, weight: .medium))
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 45)
+                .frame(height: 42)
                 .padding(.vertical, 8)
                 .cornerRadius(12)
             } else if !isRecording {
                 HStack {
                     Spacer()
                     Button(action: {
-                        onStartTap()
+                        if !hasFullAccess {
+                            showFullAccessPrompt = true
+                        } else {
+                            onStartTap()
+                        }
                     }) {
                         if isAudioSessionActive {
                             Image(systemName: "mic")
@@ -113,7 +150,7 @@ struct RecordingToolbarView: View {
                         }
                     }
                 }
-                .frame(height: 45)
+                .frame(height: 42)
             } else {
                 HStack {
                     Button(action: {
@@ -148,7 +185,7 @@ struct RecordingToolbarView: View {
                             .clipShape(Circle())
                     }
                 }
-                .frame(height: 45)
+                .frame(height: 42)
                 .cornerRadius(12)
             }
         }
@@ -166,6 +203,9 @@ struct RecordingToolbarView: View {
         .onAppear {
             AudioSessionStatusManager.shared.checkAudioSessionStatus()
             updateLocalState()
+            if hasFullAccess {
+                showFullAccessPrompt = false
+            }
         }
         .onDisappear {
             timer?.invalidate()

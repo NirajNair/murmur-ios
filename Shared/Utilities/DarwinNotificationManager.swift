@@ -15,6 +15,8 @@ struct DarwinNotifications {
     static let transcriptionReady = "com.murmur.transcriptionReady"
     static let returnToHostApp = "com.murmur.returnToHostApp"
     static let recordingStateChanged = "com.murmur.recordingStateChanged"
+    static let requestKeyboardStatus = "com.murmur.requestKeyboardStatus"
+    static let keyboardStatusUpdated = "com.murmur.keyboardStatusUpdated"
 }
 
 class DarwinNotificationManager {

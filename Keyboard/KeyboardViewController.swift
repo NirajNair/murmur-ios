@@ -11,12 +11,36 @@ class KeyboardViewController: KeyboardInputViewController {
         super.viewDidLoad()
         AudioSessionStatusManager.shared.checkAudioSessionStatus()
         setupCommunication()
+        setupStatusRequestListener()
+        recordFullAccessStatus()
 
         setup(for: .murMur) { result in
             if case let .failure(error) = result {
-                print("Keyboard setup failed:", error)
+                Logger.error("Keyboard setup failed: \(error)")
             }
         }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        recordFullAccessStatus()
+    }
+
+    private func setupStatusRequestListener() {
+        DarwinNotificationManager.shared.addObserver(
+            for: DarwinNotifications.requestKeyboardStatus
+        ) { [weak self] in
+            Logger.debug("Keyboard: Received status request from main app")
+            self?.recordFullAccessStatus()
+            DarwinNotificationManager.shared.postNotification(
+                name: DarwinNotifications.keyboardStatusUpdated
+            )
+        }
+    }
+
+    private func recordFullAccessStatus() {
+        SharedUserDefaults.keyboardHasFullAccess = self.hasFullAccess
+        SharedUserDefaults.keyboardLastCheck = Date()
     }
 
     override func viewWillSetupKeyboardView() {
@@ -28,8 +52,9 @@ class KeyboardViewController: KeyboardInputViewController {
                 buttonView: { $0.view },
                 collapsedView: { $0.view },
                 emojiKeyboard: { $0.view },
-                toolbar: { _ in
+                toolbar: { [weak self] _ in
                     RecordingToolbarView(
+                        hasFullAccess: self?.hasFullAccess ?? false,
                         onStartTap: { [weak self] in
                             self?.handleStartTap()
                         },
@@ -38,6 +63,9 @@ class KeyboardViewController: KeyboardInputViewController {
                         },
                         onCancelTap: { [weak self] in
                             self?.handleCancelTap()
+                        },
+                        onOpenSettings: { [weak self] in
+                            self?.handleOpenSettings()
                         }
                     )
                 }
@@ -92,6 +120,20 @@ class KeyboardViewController: KeyboardInputViewController {
             name: DarwinNotifications.cancelRecording
         )
         Logger.debug("Keyboard: Cancel recording notification sent")
+    }
+
+    private func handleOpenSettings() {
+        Logger.debug("Keyboard: Opening Settings")
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            var responder: UIResponder? = self
+            while responder != nil {
+                if let application = responder as? UIApplication {
+                    application.open(url)
+                    break
+                }
+                responder = responder?.next
+            }
+        }
     }
 
     private func insertTranscription(_ transcription: String) {

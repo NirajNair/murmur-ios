@@ -68,6 +68,7 @@
 				MurMurApp.swift,
 				Services/AudioRecordingManager.swift,
 				Services/DeepLinkManager.swift,
+				Services/KeyboardStatusChecker.swift,
 				Services/TranscriptionService.swift,
 				SharedConstants.swift,
 			);
@@ -82,6 +83,7 @@
 				MurMurApp.swift,
 				Services/AudioRecordingManager.swift,
 				Services/DeepLinkManager.swift,
+				Services/KeyboardStatusChecker.swift,
 				Services/TranscriptionService.swift,
 			);
 			target = D8C37D122E5313440053AB90 /* Keyboard */;
