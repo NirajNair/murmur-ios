@@ -10,6 +10,7 @@ import OSLog
 
 class KeyboardCommunicationManager {
     var onTranscriptionReady: ((String) -> Void)?
+    var onTranscriptionError: ((String) -> Void)?
     private var observersSetup = false
 
     init() {
@@ -32,11 +33,21 @@ class KeyboardCommunicationManager {
     }
 
     private func handleTranscriptionReady() {
+        if let error = SharedUserDefaults.transcriptionError {
+            onTranscriptionError?(error)
+            Logger.debug(
+                "KeyboardCommunicationManager: Transcription error: \(error)"
+            )
+            SharedUserDefaults.transcriptionError = nil
+            SharedUserDefaults.transcriptionInProgress = false
+            return
+        }
         if let transcription = SharedUserDefaults.pendingTranscription {
             onTranscriptionReady?(transcription)
             Logger.debug(
                 "KeyboardCommunicationManager: Transcription ready: \(transcription) \(SharedUserDefaults.transcriptionInProgress)"
             )
+            SharedUserDefaults.pendingTranscription = nil
             SharedUserDefaults.transcriptionInProgress = false
         }
     }

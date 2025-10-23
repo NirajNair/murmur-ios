@@ -493,20 +493,31 @@ class AudioRecordingManager: NSObject, ObservableObject {
     }
 
     private func transcribeRecording() {
-        guard let recordingURL = currentRecordingURL else {
+        guard let recordingURL = currentRecordingURL,
+            FileManager.default.fileExists(atPath: recordingURL.path)
+        else {
             Logger.error("No recording URL for transcription")
+            handleTranscriptionError("No recording file found")
             return
         }
         SharedUserDefaults.transcriptionInProgress = true
-        Logger.debug("Starting transcription for recording: \(recordingURL.lastPathComponent)")
+        NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
+        DarwinNotificationManager.shared.postNotification(
+            name: DarwinNotifications.recordingStateChanged
+        )
         TranscriptionService.shared.transcribeRecording(at: recordingURL) {
             [weak self] result in
             DispatchQueue.main.async {
                 SharedUserDefaults.transcriptionInProgress = false
+                NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
+                DarwinNotificationManager.shared.postNotification(
+                    name: DarwinNotifications.recordingStateChanged
+                )
                 switch result {
                 case .success(let transcription):
                     Logger.debug("Transcription successful: \(transcription.prefix(50))...")
                     SharedUserDefaults.pendingTranscription = transcription
+                    SharedUserDefaults.transcriptionError = nil
                     self?.deleteRecordingFile()
                     self?.resetAudioRecorderForNextSession()
                     DarwinNotificationManager.shared.postNotification(
@@ -517,18 +528,27 @@ class AudioRecordingManager: NSObject, ObservableObject {
                     }
                 case .failure(let error):
                     Logger.error("Transcription failed: \(error.localizedDescription)")
-                    let fallbackMessage = "Transcription failed: \(error.localizedDescription)"
-                    SharedUserDefaults.pendingTranscription = fallbackMessage
-                    self?.deleteRecordingFile()
-                    self?.resetAudioRecorderForNextSession()
-                    DarwinNotificationManager.shared.postNotification(
-                        name: DarwinNotifications.transcriptionReady
-                    )
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        self?.returnToHostApp()
-                    }
+                    self?.handleTranscriptionError(error.localizedDescription)
                 }
             }
+        }
+    }
+
+    private func handleTranscriptionError(_ errorMessage: String) {
+        SharedUserDefaults.transcriptionInProgress = false
+        SharedUserDefaults.transcriptionError = errorMessage
+        SharedUserDefaults.pendingTranscription = nil
+        deleteRecordingFile()
+        resetAudioRecorderForNextSession()
+        NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
+        DarwinNotificationManager.shared.postNotification(
+            name: DarwinNotifications.recordingStateChanged
+        )
+        DarwinNotificationManager.shared.postNotification(
+            name: DarwinNotifications.transcriptionReady
+        )
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.returnToHostApp()
         }
     }
 

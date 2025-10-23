@@ -16,6 +16,7 @@ struct RecordingToolbarView: View {
     @State private var recordingTime: TimeInterval = 0
     @State private var timer: Timer?
     @State private var showFullAccessPrompt = false
+    @State private var errorMessage: String?
 
     private func handleStopRecording() {
         SharedUserDefaults.transcriptionInProgress = true
@@ -192,6 +193,7 @@ struct RecordingToolbarView: View {
         .padding(.horizontal, 12)
         .padding(.top, 16)
         .padding(.bottom, 12)
+        .toast(message: $errorMessage)
         .onReceive(NotificationCenter.default.publisher(for: .init("RecordingStateChanged"))) { _ in
             Logger.debug("RecordingStateChanged notification received")
             updateLocalState()
@@ -199,6 +201,15 @@ struct RecordingToolbarView: View {
         .onReceive(NotificationCenter.default.publisher(for: .init("TranscriptionCompleted"))) {
             _ in
             updateLocalState()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .init("TranscriptionError"))) {
+            notification in
+            if let error = notification.object as? String {
+                Logger.debug("TranscriptionError notification received: \(error)")
+                withAnimation {
+                    errorMessage = error
+                }
+            }
         }
         .onAppear {
             AudioSessionStatusManager.shared.checkAudioSessionStatus()

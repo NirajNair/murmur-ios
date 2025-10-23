@@ -22,6 +22,7 @@ struct SharedUserDefaults {
         static let keyboardHasFullAccess = "keyboardHasFullAccess"
         static let keyboardLastCheck = "keyboardLastCheck"
         static let statusRequestTime = "statusRequestTime"
+        static let transcriptionError = "transcriptionError"
     }
 
     static var isRecording: Bool {
@@ -108,6 +109,14 @@ struct SharedUserDefaults {
         get { shared.object(forKey: Keys.statusRequestTime) as? Date }
         set {
             shared.set(newValue, forKey: Keys.statusRequestTime)
+            shared.synchronize()
+        }
+    }
+
+    static var transcriptionError: String? {
+        get { shared.string(forKey: Keys.transcriptionError) }
+        set {
+            shared.set(newValue, forKey: Keys.transcriptionError)
             shared.synchronize()
         }
     }

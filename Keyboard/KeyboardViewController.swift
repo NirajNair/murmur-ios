@@ -77,6 +77,9 @@ class KeyboardViewController: KeyboardInputViewController {
         communicationManager.onTranscriptionReady = { [weak self] transcription in
             self?.insertTranscription(transcription)
         }
+        communicationManager.onTranscriptionError = { [weak self] error in
+            self?.handleTranscriptionError(error)
+        }
         DarwinNotificationManager.shared.addObserver(
             for: DarwinNotifications.recordingStateChanged
         ) {
@@ -141,5 +144,11 @@ class KeyboardViewController: KeyboardInputViewController {
         textDocumentProxy.insertText(transcription)
         SharedUserDefaults.pendingTranscription = nil
         NotificationCenter.default.post(name: .init("TranscriptionCompleted"), object: nil)
+    }
+
+    private func handleTranscriptionError(_ error: String) {
+        SharedUserDefaults.transcriptionInProgress = false
+        SharedUserDefaults.transcriptionError = error
+        NotificationCenter.default.post(name: .init("TranscriptionError"), object: error)
     }
 }
