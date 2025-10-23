@@ -15,7 +15,6 @@ import OSLog
 
 class AudioRecordingManager: NSObject, ObservableObject {
     static let shared = AudioRecordingManager()
-    private let AUDIO_SESSION_TIMEOUT_DURATION: TimeInterval = 5 * 60
 
     @Published var isRecording = false
     @Published var recordingLevel: Float = 0.0
@@ -41,8 +40,26 @@ class AudioRecordingManager: NSObject, ObservableObject {
     }
 
     private func restoreSessionState() {
-        isPaused = SharedUserDefaults.isPaused
-        SharedUserDefaults.isAudioSessionActive = audioSession?.isOtherAudioPlaying ?? false
+        if SharedUserDefaults.recordingSessionId != nil {
+            if SharedUserDefaults.isSessionValid() {
+                if SharedUserDefaults.isRecording {
+                    Logger.debug("Session valid but recording was in progress - cancelling it")
+                    SharedUserDefaults.isRecording = false
+                    isPaused = false
+                    SharedUserDefaults.isPaused = false
+                    SharedUserDefaults.isAudioSessionActive = true
+                } else {
+                    isPaused = SharedUserDefaults.isPaused
+                    SharedUserDefaults.isAudioSessionActive = true
+                }
+            } else {
+                Logger.debug("Session expired - cleaning up")
+                endRecordingSession()
+            }
+        } else {
+            isPaused = SharedUserDefaults.isPaused
+            SharedUserDefaults.isAudioSessionActive = audioSession?.isOtherAudioPlaying ?? false
+        }
     }
 
     private func setupAudioSession() {
@@ -302,12 +319,23 @@ class AudioRecordingManager: NSObject, ObservableObject {
             Logger.error("Failed to start recording")
             return
         }
-        let sessionId = UUID().uuidString
+        let isNewSession = SharedUserDefaults.recordingSessionId == nil
+        if isNewSession {
+            let sessionId = UUID().uuidString
+            SharedUserDefaults.recordingSessionId = sessionId
+            SharedUserDefaults.sessionStartTime = Date()
+            Logger.debug("Created new recording session: \(sessionId)")
+            startSessionTimeoutTimer()
+        } else {
+            Logger.debug(
+                "Reusing existing recording session: \(SharedUserDefaults.recordingSessionId ?? "unknown")"
+            )
+            startSessionTimeoutTimer()
+        }
         isRecording = true
         isPaused = false
         SharedUserDefaults.isRecording = true
         SharedUserDefaults.isPaused = false
-        SharedUserDefaults.recordingSessionId = sessionId
         NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
         DarwinNotificationManager.shared.postNotification(
             name: DarwinNotifications.recordingStateChanged
@@ -315,7 +343,6 @@ class AudioRecordingManager: NSObject, ObservableObject {
         recordingTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
             self.updateRecordingLevel()
         }
-        startSessionTimeoutTimer()
     }
 
     func stopRecording() {
@@ -361,6 +388,17 @@ class AudioRecordingManager: NSObject, ObservableObject {
     private func startSessionTimeoutTimer() {
         sessionTimeoutTimer?.cancel()
         sessionTimeoutTimer = nil
+        guard let sessionStart = SharedUserDefaults.sessionStartTime else {
+            Logger.error("Cannot start session timeout timer without session start time")
+            return
+        }
+        let elapsedTime = Date().timeIntervalSince(sessionStart)
+        let remainingTime = max(0, AppGroupConstants.audioSessionTimeoutDuration - elapsedTime)
+        if remainingTime <= 0 {
+            Logger.warning("Session has already expired - ending session immediately")
+            endRecordingSession()
+            return
+        }
         #if canImport(UIKit)
             backgroundTaskIdentifier = UIApplication.shared.beginBackgroundTask(
                 withName: "AudioSessionTimeout"
@@ -370,18 +408,18 @@ class AudioRecordingManager: NSObject, ObservableObject {
         #endif
         sessionTimeoutTimer = DispatchSource.makeTimerSource(
             queue: DispatchQueue.global(qos: .background))
-        sessionTimeoutTimer?.schedule(deadline: .now() + AUDIO_SESSION_TIMEOUT_DURATION)
+        sessionTimeoutTimer?.schedule(deadline: .now() + remainingTime)
         sessionTimeoutTimer?.setEventHandler { [weak self] in
             DispatchQueue.main.async {
                 Logger.warning(
-                    "Recording session timed out after \(self?.AUDIO_SESSION_TIMEOUT_DURATION ?? 0) seconds - automatically ending session"
+                    "Recording session timed out after \(AppGroupConstants.audioSessionTimeoutDuration ?? 0) seconds - automatically ending session"
                 )
                 self?.endRecordingSession()
             }
         }
         sessionTimeoutTimer?.resume()
         Logger.debug(
-            "Background-compatible session timeout timer started - will auto-end session in \(AUDIO_SESSION_TIMEOUT_DURATION) seconds"
+            "Background-compatible session timeout timer started - will auto-end session in \(remainingTime) seconds (elapsed: \(elapsedTime))"
         )
     }
 
@@ -417,6 +455,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
         SharedUserDefaults.isRecording = false
         SharedUserDefaults.isPaused = false
         SharedUserDefaults.recordingSessionId = nil
+        SharedUserDefaults.sessionStartTime = nil
         SharedUserDefaults.isAudioSessionActive = false
         Logger.debug(
             "endRecordingSession: isAudioSessionActive=\(SharedUserDefaults.isAudioSessionActive), isPaused=\(SharedUserDefaults.isPaused)"

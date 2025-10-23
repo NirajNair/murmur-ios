@@ -23,6 +23,7 @@ struct SharedUserDefaults {
         static let keyboardLastCheck = "keyboardLastCheck"
         static let statusRequestTime = "statusRequestTime"
         static let transcriptionError = "transcriptionError"
+        static let sessionStartTime = "sessionStartTime"
     }
 
     static var isRecording: Bool {
@@ -119,5 +120,19 @@ struct SharedUserDefaults {
             shared.set(newValue, forKey: Keys.transcriptionError)
             shared.synchronize()
         }
+    }
+
+    static var sessionStartTime: Date? {
+        get { shared.object(forKey: Keys.sessionStartTime) as? Date }
+        set {
+            shared.set(newValue, forKey: Keys.sessionStartTime)
+            shared.synchronize()
+        }
+    }
+
+    static func isSessionValid() -> Bool {
+        guard let startTime = sessionStartTime else { return false }
+        let elapsedTime = Date().timeIntervalSince(startTime)
+        return elapsedTime < AppGroupConstants.audioSessionTimeoutDuration
     }
 }

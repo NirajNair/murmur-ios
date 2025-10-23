@@ -54,13 +54,24 @@ class AudioSessionStatusManager {
         deviceStatus: DeviceAudioSessionStatus, storedData: StoredSessionData
     ) -> ActualAudioSessionState {
         var actualState = ActualAudioSessionState()
+        let isSessionValid = SharedUserDefaults.isSessionValid()
+        let hasStoredSession = storedData.recordingSessionId != nil
+        if hasStoredSession && !isSessionValid {
+            Logger.debug("Session expired during status check - clearing all state")
+            actualState.isAudioSessionActive = false
+            actualState.isRecording = false
+            actualState.isPaused = false
+            actualState.transcriptionInProgress = false
+            actualState.recordingSessionId = nil
+            return actualState
+        }
         let hasValidStoredSession =
-            storedData.recordingSessionId != nil && (storedData.isRecording || storedData.isPaused)
+            hasStoredSession && isSessionValid
         let deviceSupportsRecording =
             deviceStatus.recordingPermission == .granted && deviceStatus.supportsRecording
         if hasValidStoredSession && deviceSupportsRecording {
             actualState.isAudioSessionActive = true
-            actualState.isRecording = storedData.isRecording && !storedData.isPaused
+            actualState.isRecording = storedData.isRecording
             actualState.isPaused = storedData.isPaused
             actualState.transcriptionInProgress = storedData.transcriptionInProgress
             actualState.recordingSessionId = storedData.recordingSessionId
