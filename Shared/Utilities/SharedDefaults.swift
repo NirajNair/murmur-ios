@@ -133,6 +133,12 @@ struct SharedUserDefaults {
     static func isSessionValid() -> Bool {
         guard let startTime = sessionStartTime else { return false }
         let elapsedTime = Date().timeIntervalSince(startTime)
-        return elapsedTime < AppGroupConstants.audioSessionTimeoutDuration
+        guard
+            let recordingSessionTimeoutDuration = KeychainHelper.get(
+                key: AppGroupConstants.recordingSessionTimeoutDurationKey,
+                as: TimeInterval.self
+            )
+        else { return false }
+        return elapsedTime < (recordingSessionTimeoutDuration)
     }
 }

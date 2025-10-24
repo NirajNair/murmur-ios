@@ -5,7 +5,9 @@ struct AppGroupConstants {
     static let userDefaultsSuiteName = groupIdentifier
     static let isRecordingKey = "isRecording"
     static let transcribedTextKey = "transcribedText"
-    static let audioSessionTimeoutDuration: TimeInterval = 5 * 60
+    static let appVersionKey = "appVersion"
+    static let recordingSessionTimeoutDurationKey = "recordingSessionTimeoutDuration"
+    static let apiBaseUrlKey = "apiBaseUrl"
 }
 
 struct URLSchemeConstants {

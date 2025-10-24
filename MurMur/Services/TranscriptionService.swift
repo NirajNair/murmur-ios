@@ -11,7 +11,9 @@ import OSLog
 class TranscriptionService: NSObject {
     static let shared = TranscriptionService()
 
-    private var API_BASE_URL: String = "https://e2d3e7f5c127.ngrok-free.app/api/v1"
+    private var API_BASE_URL: String =
+        KeychainHelper.get(key: AppGroupConstants.apiBaseUrlKey, as: String.self)!
+
     private let timeoutInterval: TimeInterval = 30.0
 
     private override init() {
@@ -44,7 +46,7 @@ class TranscriptionService: NSObject {
         request.setValue("MurMur/1.0", forHTTPHeaderField: "User-Agent")
         request.httpBody = audioData
         request.timeoutInterval = timeoutInterval
-        Logger.debug("Sending transcription request to: \(API_BASE_URL)")
+        Logger.debug("Sending transcription request to: \(url)")
         let (data, response): (Data, URLResponse)
         do {
             (data, response) = try await URLSession.shared.data(for: request)
