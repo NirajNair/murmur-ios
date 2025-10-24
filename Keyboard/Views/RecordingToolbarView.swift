@@ -9,10 +9,10 @@ struct RecordingToolbarView: View {
     let onCancelTap: () -> Void
     let onOpenSettings: () -> Void
 
-    @State private var isRecording = false
-    @State private var transcriptionInProgress = false
-    @State private var isAudioSessionActive = false
-    @State private var isPaused = false
+    @State private var isRecording = SharedUserDefaults.isRecording
+    @State private var transcriptionInProgress = SharedUserDefaults.transcriptionInProgress
+    @State private var isAudioSessionActive = SharedUserDefaults.isAudioSessionActive
+    @State private var isPaused = SharedUserDefaults.isPaused
     @State private var recordingTime: TimeInterval = 0
     @State private var timer: Timer?
     @State private var showFullAccessPrompt = false
@@ -212,7 +212,6 @@ struct RecordingToolbarView: View {
             }
         }
         .onAppear {
-            AudioSessionStatusManager.shared.checkAudioSessionStatus()
             updateLocalState()
             if hasFullAccess {
                 showFullAccessPrompt = false

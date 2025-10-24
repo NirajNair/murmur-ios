@@ -21,6 +21,11 @@ class KeyboardViewController: KeyboardInputViewController {
         }
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        AudioSessionStatusManager.shared.checkAudioSessionStatus()
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         recordFullAccessStatus()
