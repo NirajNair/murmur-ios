@@ -31,9 +31,17 @@ struct RecordingToolbarView: View {
         transcriptionInProgress = SharedUserDefaults.transcriptionInProgress
         isAudioSessionActive = SharedUserDefaults.isAudioSessionActive
         isPaused = SharedUserDefaults.isPaused
-        if !wasRecording && isRecording && timer == nil {
-            recordingTime = 0
+        if isRecording && timer == nil {
+            if let recordingStartTime = SharedUserDefaults.recordingStartTime {
+                recordingTime = Date().timeIntervalSince(recordingStartTime)
+            } else {
+                recordingTime = 0
+            }
             startTimer()
+        } else if !isRecording && timer != nil {
+            timer?.invalidate()
+            timer = nil
+            recordingTime = 0
         }
         if SharedUserDefaults.recordingSessionId == nil {
             isRecording = false
@@ -215,6 +223,12 @@ struct RecordingToolbarView: View {
             updateLocalState()
             if hasFullAccess {
                 showFullAccessPrompt = false
+            }
+            if isRecording && timer == nil {
+                if let recordingStartTime = SharedUserDefaults.recordingStartTime {
+                    recordingTime = Date().timeIntervalSince(recordingStartTime)
+                }
+                startTimer()
             }
         }
         .onDisappear {

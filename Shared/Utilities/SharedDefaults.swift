@@ -24,6 +24,8 @@ struct SharedUserDefaults {
         static let statusRequestTime = "statusRequestTime"
         static let transcriptionError = "transcriptionError"
         static let sessionStartTime = "sessionStartTime"
+        static let recordingStartTime = "recordingStartTime"
+        static let recordingSessionTimeoutDuration = "recordingSessionTimeoutDuration"
     }
 
     static var isRecording: Bool {
@@ -130,15 +132,29 @@ struct SharedUserDefaults {
         }
     }
 
+    static var recordingStartTime: Date? {
+        get { shared.object(forKey: Keys.recordingStartTime) as? Date }
+        set {
+            shared.set(newValue, forKey: Keys.recordingStartTime)
+            shared.synchronize()
+        }
+    }
+
+    static var recordingSessionTimeoutDuration: TimeInterval {
+        get {
+            let value = shared.double(forKey: Keys.recordingSessionTimeoutDuration)
+            return value > 0 ? value : 300.0  // Default to 5 minutes
+        }
+        set {
+            shared.set(newValue, forKey: Keys.recordingSessionTimeoutDuration)
+            shared.synchronize()
+        }
+    }
+
     static func isSessionValid() -> Bool {
         guard let startTime = sessionStartTime else { return false }
         let elapsedTime = Date().timeIntervalSince(startTime)
-        guard
-            let recordingSessionTimeoutDuration = KeychainHelper.get(
-                key: AppGroupConstants.recordingSessionTimeoutDurationKey,
-                as: TimeInterval.self
-            )
-        else { return false }
-        return elapsedTime < (recordingSessionTimeoutDuration)
+        let timeoutDuration = recordingSessionTimeoutDuration
+        return elapsedTime < timeoutDuration
     }
 }

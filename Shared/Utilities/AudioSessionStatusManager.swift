@@ -65,11 +65,8 @@ class AudioSessionStatusManager {
             actualState.recordingSessionId = nil
             return actualState
         }
-        let hasValidStoredSession =
-            hasStoredSession && isSessionValid
-        let deviceSupportsRecording =
-            deviceStatus.recordingPermission == .granted && deviceStatus.supportsRecording
-        if hasValidStoredSession && deviceSupportsRecording {
+        let hasValidStoredSession = hasStoredSession && isSessionValid
+        if hasValidStoredSession {
             actualState.isAudioSessionActive = true
             actualState.isRecording = storedData.isRecording
             actualState.isPaused = storedData.isPaused

@@ -55,7 +55,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         for key in configKeys {
             let value = remoteConfig[key]
             if key == AppGroupConstants.recordingSessionTimeoutDurationKey {
-                KeychainHelper.save(key: key, value: value.numberValue.doubleValue)
+                let duration = value.numberValue.doubleValue
+                KeychainHelper.save(key: key, value: duration)
+                SharedUserDefaults.recordingSessionTimeoutDuration = duration
             } else if key == AppGroupConstants.appVersionKey {
                 KeychainHelper.save(key: key, value: value.stringValue ?? "1.0.0")
             } else if key == AppGroupConstants.apiBaseUrlKey {

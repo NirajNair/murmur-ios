@@ -332,6 +332,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
             )
             startSessionTimeoutTimer()
         }
+        SharedUserDefaults.recordingStartTime = Date()
         isRecording = true
         isPaused = false
         SharedUserDefaults.isRecording = true
@@ -393,13 +394,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
             return
         }
         let elapsedTime = Date().timeIntervalSince(sessionStart)
-        let recordingSessionTimeoutDuration =
-            KeychainHelper.get(
-                key: AppGroupConstants.recordingSessionTimeoutDurationKey,
-                as: TimeInterval.self
-            )!
-
-        let remainingTime = max(0, recordingSessionTimeoutDuration - elapsedTime)
+        let remainingTime = max(0, SharedUserDefaults.recordingSessionTimeoutDuration - elapsedTime)
         if remainingTime <= 0 {
             Logger.warning("Session has already expired - ending session immediately")
             endRecordingSession()
@@ -418,7 +413,7 @@ class AudioRecordingManager: NSObject, ObservableObject {
         sessionTimeoutTimer?.setEventHandler { [weak self] in
             DispatchQueue.main.async {
                 Logger.warning(
-                    "Recording session timed out after \(recordingSessionTimeoutDuration ?? 0) seconds - automatically ending session"
+                    "Recording session timed out after \(SharedUserDefaults.recordingSessionTimeoutDuration) seconds - automatically ending session"
                 )
                 self?.endRecordingSession()
             }

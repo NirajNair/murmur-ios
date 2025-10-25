@@ -29,6 +29,7 @@ class KeyboardViewController: KeyboardInputViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         recordFullAccessStatus()
+        NotificationCenter.default.post(name: .init("RecordingStateChanged"), object: nil)
     }
 
     private func setupStatusRequestListener() {
