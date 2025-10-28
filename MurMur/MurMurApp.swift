@@ -81,6 +81,7 @@ struct MurMurApp: App {
                     .onOpenURL { url in
                         deepLinkManager.handleURL(url)
                     }
+                    .preferredColorScheme(.dark)
             }
         }
     }

@@ -48,7 +48,6 @@ struct ContentView: View {
                     isSettingUpAudio = true
                     let setupSuccess = await audioManager.configureAudioSessionForRecording()
                     if setupSuccess {
-                        try? await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second
                         await audioManager.startRecording()
                     }
                     isSettingUpAudio = false
@@ -93,9 +92,10 @@ struct KeyboardSetupView: View {
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 8) {
-                Image(systemName: "keyboard.fill")
-                    .font(.system(size: 50))
-                    .foregroundStyle(.blue.gradient)
+                Image("AppLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
                     .padding(.top, 20)
 
                 Text("MurMur")
@@ -293,7 +293,7 @@ struct InstructionRow: View {
     let text: String
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             ZStack {
                 Circle()
                     .fill(Color.blue.opacity(0.2))
@@ -304,13 +304,11 @@ struct InstructionRow: View {
                     .foregroundColor(.blue)
             }
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text(text)
-                    .font(.subheadline)
-                    .fontWeight(.regular)
-                    .foregroundColor(.primary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(text)
+                .font(.subheadline)
+                .fontWeight(.regular)
+                .foregroundColor(.primary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Spacer()
         }
